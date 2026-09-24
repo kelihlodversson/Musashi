@@ -78,7 +78,9 @@ const char *const m68ki_cpu_names[] =
 #endif /* M68K_LOG_ENABLE */
 
 /* The CPU core */
-m68ki_cpu_core m68ki_cpu = {0};
+#if !M68K_CPU_STATE_HAS_EXTERNAL_DEF
+m68ki_cpu_core M68K_CPU_STATE = {0};
+#endif
 
 #if M68K_EMULATE_ADDRESS_ERROR
 #ifdef _BSD_SETJMP_H
@@ -623,7 +625,7 @@ static void default_instr_hook_callback(unsigned int pc)
 /* Access the internals of the CPU */
 unsigned int m68k_get_reg(void* context, m68k_register_t regnum)
 {
-	m68ki_cpu_core* cpu = context != NULL ?(m68ki_cpu_core*)context : &m68ki_cpu;
+	m68ki_cpu_core* cpu = context != NULL ?(m68ki_cpu_core*)context : &M68K_CPU_STATE;
 
 	switch(regnum)
 	{
@@ -936,18 +938,18 @@ void m68k_set_cpu_type(unsigned int cpu_type)
 			return;
 		case M68K_CPU_TYPE_68LC040:
 			CPU_TYPE         = CPU_TYPE_LC040;
-			m68ki_cpu.sr_mask          = 0xf71f; /* T1 T0 S  M  -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
-			m68ki_cpu.cyc_instruction  = m68ki_cycles[4];
-			m68ki_cpu.cyc_exception    = m68ki_exception_cycle_table[4];
-			m68ki_cpu.cyc_bcc_notake_b = -2;
-			m68ki_cpu.cyc_bcc_notake_w = 0;
-			m68ki_cpu.cyc_dbcc_f_noexp = 0;
-			m68ki_cpu.cyc_dbcc_f_exp   = 4;
-			m68ki_cpu.cyc_scc_r_true   = 0;
-			m68ki_cpu.cyc_movem_w      = 2;
-			m68ki_cpu.cyc_movem_l      = 2;
-			m68ki_cpu.cyc_shift        = 0;
-			m68ki_cpu.cyc_reset        = 518;
+			M68K_CPU_STATE.sr_mask          = 0xf71f; /* T1 T0 S  M  -- I2 I1 I0 -- -- -- X  N  Z  V  C  */
+			M68K_CPU_STATE.cyc_instruction  = m68ki_cycles[4];
+			M68K_CPU_STATE.cyc_exception    = m68ki_exception_cycle_table[4];
+			M68K_CPU_STATE.cyc_bcc_notake_b = -2;
+			M68K_CPU_STATE.cyc_bcc_notake_w = 0;
+			M68K_CPU_STATE.cyc_dbcc_f_noexp = 0;
+			M68K_CPU_STATE.cyc_dbcc_f_exp   = 4;
+			M68K_CPU_STATE.cyc_scc_r_true   = 0;
+			M68K_CPU_STATE.cyc_movem_w      = 2;
+			M68K_CPU_STATE.cyc_movem_l      = 2;
+			M68K_CPU_STATE.cyc_shift        = 0;
+			M68K_CPU_STATE.cyc_reset        = 518;
 			HAS_PMMU	       = 1;
 			return;
 	}
@@ -1059,19 +1061,19 @@ void m68k_set_irq(unsigned int int_level)
 	/* A transition from < 7 to 7 always interrupts (NMI) */
 	/* Note: Level 7 can also level trigger like a normal IRQ */
 	if(old_level != 0x0700 && CPU_INT_LEVEL == 0x0700)
-		m68ki_cpu.nmi_pending = TRUE;
+		M68K_CPU_STATE.nmi_pending = TRUE;
 }
 
 void m68k_set_virq(unsigned int level, unsigned int active)
 {
-	uint state = m68ki_cpu.virq_state;
+	uint state = M68K_CPU_STATE.virq_state;
 	uint blevel;
 
 	if(active)
 		state |= 1 << level;
 	else
 		state &= ~(1 << level);
-	m68ki_cpu.virq_state = state;
+	M68K_CPU_STATE.virq_state = state;
 
 	for(blevel = 7; blevel > 0; blevel--)
 		if(state & (1 << blevel))
@@ -1081,7 +1083,7 @@ void m68k_set_virq(unsigned int level, unsigned int active)
 
 unsigned int m68k_get_virq(unsigned int level)
 {
-	return (m68ki_cpu.virq_state & (1 << level)) ? 1 : 0;
+	return (M68K_CPU_STATE.virq_state & (1 << level)) ? 1 : 0;
 }
 
 void m68k_init(void)
@@ -1118,7 +1120,7 @@ void m68k_pulse_bus_error(void)
 void m68k_pulse_reset(void)
 {
 	/* Disable the PMMU on reset */
-	m68ki_cpu.pmmu_enabled = 0;
+	M68K_CPU_STATE.pmmu_enabled = 0;
 
 	/* Clear all stop levels and eat up all remaining cycles */
 	CPU_STOPPED = 0;
@@ -1133,7 +1135,7 @@ void m68k_pulse_reset(void)
 	/* Interrupt mask to level 7 */
 	FLAG_INT_MASK = 0x0700;
 	CPU_INT_LEVEL = 0;
-	m68ki_cpu.virq_state = 0;
+	M68K_CPU_STATE.virq_state = 0;
 	/* Reset VBR */
 	REG_VBR = 0;
 	/* Go to supervisor mode */
@@ -1171,13 +1173,13 @@ unsigned int m68k_context_size(void)
 
 unsigned int m68k_get_context(void* dst)
 {
-	if(dst) *(m68ki_cpu_core*)dst = m68ki_cpu;
+	if(dst) *(m68ki_cpu_core*)dst = M68K_CPU_STATE;
 	return sizeof(m68ki_cpu_core);
 }
 
 void m68k_set_context(void* src)
 {
-	if(src) m68ki_cpu = *(m68ki_cpu_core*)src;
+	if(src) M68K_CPU_STATE = *(m68ki_cpu_core*)src;
 }
 
 /* ======================================================================== */

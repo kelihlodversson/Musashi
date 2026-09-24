@@ -232,7 +232,7 @@ static inline void store_pack_float80(uint32 ea, int k, floatx80 fpr)
 		{
 			dw2 &= pkmask2[17];
 			dw3 &= pkmask3[17];
-//			m68ki_cpu.fpcr |=  (need to set OPERR bit)
+//			M68K_CPU_STATE.fpcr |=  (need to set OPERR bit)
 		}
 	}
 
@@ -1646,7 +1646,7 @@ static void fmove_fpcr(uint16 w2)
 	}
 	else		// From <ea> to system control reg
 	{
-      if (reg & 4) 
+      if (reg & 4)
 		{
 		  REG_FPCR = READ_EA_32(ea);
 		  // JFF: need to update rounding mode from softfloat module
@@ -1671,11 +1671,11 @@ static void fmovem(uint16 w2)
 	{
 		switch (mode)
 	{
-	  	case 2:		// (JFF): Static register list, postincrement or control addressing mode.     
+	  	case 2:		// (JFF): Static register list, postincrement or control addressing mode.
 	    {
 	      int imode = (ea >> 3) & 0x7;
 	      int reg = (ea & 0x7);
-	      int di_mode = imode == 5;	      
+	      int di_mode = imode == 5;
 	      uint32 di_mode_ea = di_mode ? (REG_A[reg]+MAKE_INT_16(m68ki_read_imm_16())) : 0;
 	      for (i=0; i < 8; i++)
 			{
@@ -1699,7 +1699,7 @@ static void fmovem(uint16 w2)
 	      // to call EA_AY_DI_32() (that advances PC & reads displacement) each time
 	      // when the proper behaviour is 1) read once, 2) increment ea for each matching register
 	      // this forces to pre-read the mode (named "imode") so we can decide to read displacement, only once
-	      int di_mode = imode == 5;	      
+	      int di_mode = imode == 5;
 	      uint32 di_mode_ea =  di_mode ? (REG_A[reg]+MAKE_INT_16(m68ki_read_imm_16())) : 0;
 				for (i=0; i < 8; i++)
 				{
@@ -1727,7 +1727,7 @@ static void fmovem(uint16 w2)
 			{
 		      int imode = (ea >> 3) & 0x7;
 		      int reg = (ea & 0x7);
-		      int di_mode = imode == 5;	    
+		      int di_mode = imode == 5;
 		      uint32 di_mode_ea = di_mode ? (REG_A[reg]+MAKE_INT_16(m68ki_read_imm_16())) : 0;
 				for (i=0; i < 8; i++)
 				{
@@ -1751,20 +1751,20 @@ static void fmovem(uint16 w2)
 
 static void fscc(void)
 {
-  // added by JFF, this seems to work properly now 
+  // added by JFF, this seems to work properly now
   int condition = OPER_I_16() & 0x3f;
 
   int cc = TEST_CONDITION(condition);
   int mode = (REG_IR & 0x38) >> 3;
   int v = (cc ? 0xff : 0x00);
-  
+
   switch (mode)
   {
   case 0:  // fscc Dx
     {
       // If the specified floating-point condition is true, sets the byte integer operand at
       // the destination to TRUE (all ones); otherwise, sets the byte to FALSE (all zeros).
-      
+
       REG_D[REG_IR & 7] = (REG_D[REG_IR & 7] & 0xFFFFFF00) | v;
       break;
     }
@@ -1775,7 +1775,7 @@ static void fscc(void)
     m68ki_write_8(ea,v);
     break;
     }
-    
+
   default:
     {
       // unimplemented see fpu_uae.cpp around line 1300
@@ -1821,7 +1821,7 @@ static void fbcc32(void)
 
 void m68040_fpu_op0(void)
 {
-	m68ki_cpu.fpu_just_reset = 0;
+	M68K_CPU_STATE.fpu_just_reset = 0;
 
 	switch ((REG_IR >> 6) & 0x3)
 	{
@@ -1878,7 +1878,7 @@ void m68040_fpu_op0(void)
 			break;
 		}
 
-      default:	fatalerror("M68kFPU: unimplemented main op %d at %08X\n", (m68ki_cpu.ir >> 6) & 0x3,  REG_PC-4);
+      default:	fatalerror("M68kFPU: unimplemented main op %d at %08X\n", (M68K_CPU_STATE.ir >> 6) & 0x3,  REG_PC-4);
 	}
 }
 
@@ -1923,7 +1923,7 @@ static void do_frestore_null(void)
 
 	// Mac IIci at 408458e6 wants an FSAVE of a just-restored NULL frame to also be NULL
 	// The PRM says it's possible to generate a NULL frame, but not how/when/why.  (need the 68881/68882 manual!)
-	m68ki_cpu.fpu_just_reset = 1;
+	M68K_CPU_STATE.fpu_just_reset = 1;
 }
 
 void m68040_fpu_op1(void)
@@ -1942,7 +1942,7 @@ void m68040_fpu_op1(void)
 				case 3:	// (An)+
 		    			addr = EA_AY_PI_32();
 
-					if (m68ki_cpu.fpu_just_reset)
+					if (M68K_CPU_STATE.fpu_just_reset)
 					{
 						m68ki_write_32(addr, 0);
 					}
@@ -1957,7 +1957,7 @@ void m68040_fpu_op1(void)
 				case 4: // -(An)
 		    			addr = EA_AY_PD_32();
 
-					if (m68ki_cpu.fpu_just_reset)
+					if (M68K_CPU_STATE.fpu_just_reset)
 					{
 						m68ki_write_32(addr, 0);
 					}
@@ -1988,7 +1988,7 @@ void m68040_fpu_op1(void)
 					if (temp & 0xff000000)
 					{
 						// we don't handle non-NULL frames and there's no pre/post inc/dec to do here
-						m68ki_cpu.fpu_just_reset = 0;
+						M68K_CPU_STATE.fpu_just_reset = 0;
 					}
 					else
 					{
@@ -2003,7 +2003,7 @@ void m68040_fpu_op1(void)
 					// check for NULL frame
 					if (temp & 0xff000000)
 					{
-						m68ki_cpu.fpu_just_reset = 0;
+						M68K_CPU_STATE.fpu_just_reset = 0;
 
 						// how about an IDLE frame?
 						if ((temp & 0x00ff0000) == 0x00180000)
@@ -2035,6 +2035,3 @@ void m68040_fpu_op1(void)
 		default:	fatalerror("m68040_fpu_op1: unimplemented op %d at %08X\n", (REG_IR >> 6) & 0x3, REG_PC-2);
 	}
 }
-
-
-

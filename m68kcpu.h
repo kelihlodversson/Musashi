@@ -325,79 +325,85 @@ typedef uint32 uint64;
 
 /* ------------------------------ CPU Access ------------------------------ */
 
+#if !M68K_CPU_STATE_HAS_EXTERNAL_DEF
+#undef M68K_CPU_STATE
+#undef M68K_CPU_STATE_DECL
+#define M68K_CPU_STATE m68ki_cpu
+#endif
+
 /* Access the CPU registers */
-#define CPU_TYPE         m68ki_cpu.cpu_type
+#define CPU_TYPE         M68K_CPU_STATE.cpu_type
 
-#define REG_DA           m68ki_cpu.dar /* easy access to data and address regs */
-#define REG_DA_SAVE           m68ki_cpu.dar_save
-#define REG_D            m68ki_cpu.dar
-#define REG_A            (m68ki_cpu.dar+8)
-#define REG_PPC 		 m68ki_cpu.ppc
-#define REG_PC           m68ki_cpu.pc
-#define REG_SP_BASE      m68ki_cpu.sp
-#define REG_USP          m68ki_cpu.sp[0]
-#define REG_ISP          m68ki_cpu.sp[4]
-#define REG_MSP          m68ki_cpu.sp[6]
-#define REG_SP           m68ki_cpu.dar[15]
-#define REG_VBR          m68ki_cpu.vbr
-#define REG_SFC          m68ki_cpu.sfc
-#define REG_DFC          m68ki_cpu.dfc
-#define REG_CACR         m68ki_cpu.cacr
-#define REG_CAAR         m68ki_cpu.caar
-#define REG_IR           m68ki_cpu.ir
+#define REG_DA           M68K_CPU_STATE.dar /* easy access to data and address regs */
+#define REG_DA_SAVE           M68K_CPU_STATE.dar_save
+#define REG_D            M68K_CPU_STATE.dar
+#define REG_A            (M68K_CPU_STATE.dar+8)
+#define REG_PPC 		 M68K_CPU_STATE.ppc
+#define REG_PC           M68K_CPU_STATE.pc
+#define REG_SP_BASE      M68K_CPU_STATE.sp
+#define REG_USP          M68K_CPU_STATE.sp[0]
+#define REG_ISP          M68K_CPU_STATE.sp[4]
+#define REG_MSP          M68K_CPU_STATE.sp[6]
+#define REG_SP           M68K_CPU_STATE.dar[15]
+#define REG_VBR          M68K_CPU_STATE.vbr
+#define REG_SFC          M68K_CPU_STATE.sfc
+#define REG_DFC          M68K_CPU_STATE.dfc
+#define REG_CACR         M68K_CPU_STATE.cacr
+#define REG_CAAR         M68K_CPU_STATE.caar
+#define REG_IR           M68K_CPU_STATE.ir
 
-#define REG_FP           m68ki_cpu.fpr
-#define REG_FPCR         m68ki_cpu.fpcr
-#define REG_FPSR         m68ki_cpu.fpsr
-#define REG_FPIAR        m68ki_cpu.fpiar
+#define REG_FP           M68K_CPU_STATE.fpr
+#define REG_FPCR         M68K_CPU_STATE.fpcr
+#define REG_FPSR         M68K_CPU_STATE.fpsr
+#define REG_FPIAR        M68K_CPU_STATE.fpiar
 
-#define FLAG_T1          m68ki_cpu.t1_flag
-#define FLAG_T0          m68ki_cpu.t0_flag
-#define FLAG_S           m68ki_cpu.s_flag
-#define FLAG_M           m68ki_cpu.m_flag
-#define FLAG_X           m68ki_cpu.x_flag
-#define FLAG_N           m68ki_cpu.n_flag
-#define FLAG_Z           m68ki_cpu.not_z_flag
-#define FLAG_V           m68ki_cpu.v_flag
-#define FLAG_C           m68ki_cpu.c_flag
-#define FLAG_INT_MASK    m68ki_cpu.int_mask
+#define FLAG_T1          M68K_CPU_STATE.t1_flag
+#define FLAG_T0          M68K_CPU_STATE.t0_flag
+#define FLAG_S           M68K_CPU_STATE.s_flag
+#define FLAG_M           M68K_CPU_STATE.m_flag
+#define FLAG_X           M68K_CPU_STATE.x_flag
+#define FLAG_N           M68K_CPU_STATE.n_flag
+#define FLAG_Z           M68K_CPU_STATE.not_z_flag
+#define FLAG_V           M68K_CPU_STATE.v_flag
+#define FLAG_C           M68K_CPU_STATE.c_flag
+#define FLAG_INT_MASK    M68K_CPU_STATE.int_mask
 
-#define CPU_INT_LEVEL    m68ki_cpu.int_level /* ASG: changed from CPU_INTS_PENDING */
-#define CPU_STOPPED      m68ki_cpu.stopped
-#define CPU_PREF_ADDR    m68ki_cpu.pref_addr
-#define CPU_PREF_DATA    m68ki_cpu.pref_data
-#define CPU_ADDRESS_MASK m68ki_cpu.address_mask
-#define CPU_SR_MASK      m68ki_cpu.sr_mask
-#define CPU_INSTR_MODE   m68ki_cpu.instr_mode
-#define CPU_RUN_MODE     m68ki_cpu.run_mode
+#define CPU_INT_LEVEL    M68K_CPU_STATE.int_level /* ASG: changed from CPU_INTS_PENDING */
+#define CPU_STOPPED      M68K_CPU_STATE.stopped
+#define CPU_PREF_ADDR    M68K_CPU_STATE.pref_addr
+#define CPU_PREF_DATA    M68K_CPU_STATE.pref_data
+#define CPU_ADDRESS_MASK M68K_CPU_STATE.address_mask
+#define CPU_SR_MASK      M68K_CPU_STATE.sr_mask
+#define CPU_INSTR_MODE   M68K_CPU_STATE.instr_mode
+#define CPU_RUN_MODE     M68K_CPU_STATE.run_mode
 
-#define CYC_INSTRUCTION  m68ki_cpu.cyc_instruction
-#define CYC_EXCEPTION    m68ki_cpu.cyc_exception
-#define CYC_BCC_NOTAKE_B m68ki_cpu.cyc_bcc_notake_b
-#define CYC_BCC_NOTAKE_W m68ki_cpu.cyc_bcc_notake_w
-#define CYC_DBCC_F_NOEXP m68ki_cpu.cyc_dbcc_f_noexp
-#define CYC_DBCC_F_EXP   m68ki_cpu.cyc_dbcc_f_exp
-#define CYC_SCC_R_TRUE   m68ki_cpu.cyc_scc_r_true
-#define CYC_MOVEM_W      m68ki_cpu.cyc_movem_w
-#define CYC_MOVEM_L      m68ki_cpu.cyc_movem_l
-#define CYC_SHIFT        m68ki_cpu.cyc_shift
-#define CYC_RESET        m68ki_cpu.cyc_reset
-#define HAS_PMMU	 m68ki_cpu.has_pmmu
-#define PMMU_ENABLED	 m68ki_cpu.pmmu_enabled
-#define RESET_CYCLES	 m68ki_cpu.reset_cycles
+#define CYC_INSTRUCTION  M68K_CPU_STATE.cyc_instruction
+#define CYC_EXCEPTION    M68K_CPU_STATE.cyc_exception
+#define CYC_BCC_NOTAKE_B M68K_CPU_STATE.cyc_bcc_notake_b
+#define CYC_BCC_NOTAKE_W M68K_CPU_STATE.cyc_bcc_notake_w
+#define CYC_DBCC_F_NOEXP M68K_CPU_STATE.cyc_dbcc_f_noexp
+#define CYC_DBCC_F_EXP   M68K_CPU_STATE.cyc_dbcc_f_exp
+#define CYC_SCC_R_TRUE   M68K_CPU_STATE.cyc_scc_r_true
+#define CYC_MOVEM_W      M68K_CPU_STATE.cyc_movem_w
+#define CYC_MOVEM_L      M68K_CPU_STATE.cyc_movem_l
+#define CYC_SHIFT        M68K_CPU_STATE.cyc_shift
+#define CYC_RESET        M68K_CPU_STATE.cyc_reset
+#define HAS_PMMU	 M68K_CPU_STATE.has_pmmu
+#define PMMU_ENABLED	 M68K_CPU_STATE.pmmu_enabled
+#define RESET_CYCLES	 M68K_CPU_STATE.reset_cycles
 
 
-#define CALLBACK_INT_ACK     m68ki_cpu.int_ack_callback
-#define CALLBACK_BKPT_ACK    m68ki_cpu.bkpt_ack_callback
-#define CALLBACK_RESET_INSTR m68ki_cpu.reset_instr_callback
-#define CALLBACK_CMPILD_INSTR m68ki_cpu.cmpild_instr_callback
-#define CALLBACK_RTE_INSTR    m68ki_cpu.rte_instr_callback
-#define CALLBACK_TAS_INSTR    m68ki_cpu.tas_instr_callback
-#define CALLBACK_ILLG_INSTR    m68ki_cpu.illg_instr_callback
-#define CALLBACK_TRAP_INSTR  m68ki_cpu.trap_instr_callback
-#define CALLBACK_PC_CHANGED  m68ki_cpu.pc_changed_callback
-#define CALLBACK_SET_FC      m68ki_cpu.set_fc_callback
-#define CALLBACK_INSTR_HOOK  m68ki_cpu.instr_hook_callback
+#define CALLBACK_INT_ACK     M68K_CPU_STATE.int_ack_callback
+#define CALLBACK_BKPT_ACK    M68K_CPU_STATE.bkpt_ack_callback
+#define CALLBACK_RESET_INSTR M68K_CPU_STATE.reset_instr_callback
+#define CALLBACK_CMPILD_INSTR M68K_CPU_STATE.cmpild_instr_callback
+#define CALLBACK_RTE_INSTR    M68K_CPU_STATE.rte_instr_callback
+#define CALLBACK_TAS_INSTR    M68K_CPU_STATE.tas_instr_callback
+#define CALLBACK_ILLG_INSTR    M68K_CPU_STATE.illg_instr_callback
+#define CALLBACK_TRAP_INSTR  M68K_CPU_STATE.trap_instr_callback
+#define CALLBACK_PC_CHANGED  M68K_CPU_STATE.pc_changed_callback
+#define CALLBACK_SET_FC      M68K_CPU_STATE.set_fc_callback
+#define CALLBACK_INSTR_HOOK  M68K_CPU_STATE.instr_hook_callback
 
 
 
@@ -1016,8 +1022,12 @@ typedef struct
 
 } m68ki_cpu_core;
 
+#if M68K_CPU_STATE_HAS_EXTERNAL_DEF
+M68K_CPU_STATE_DECL
+#else
+extern m68ki_cpu_core M68K_CPU_STATE;
+#endif
 
-extern m68ki_cpu_core m68ki_cpu;
 extern sint           m68ki_remaining_cycles;
 extern uint           m68ki_tracing;
 extern const uint8    m68ki_shift_8_table[];
@@ -2162,9 +2172,9 @@ static inline void m68ki_exception_interrupt(uint int_level)
 /* ASG: Check for interrupts */
 static inline void m68ki_check_interrupts(void)
 {
-	if(m68ki_cpu.nmi_pending)
+	if(M68K_CPU_STATE.nmi_pending)
 	{
-		m68ki_cpu.nmi_pending = FALSE;
+		M68K_CPU_STATE.nmi_pending = FALSE;
 		m68ki_exception_interrupt(7);
 	}
 	else if(CPU_INT_LEVEL > FLAG_INT_MASK)

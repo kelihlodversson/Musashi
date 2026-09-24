@@ -162,6 +162,14 @@
 #define M68K_TAS_CALLBACK()         your_tas_handler_function()
 #endif
 
+/* If ON, CPU state is defined by code outside Musashi
+ */
+#ifndef M68K_CPU_STATE_HAS_EXTERNAL_DEF
+#define M68K_CPU_STATE_HAS_EXTERNAL_DEF  M68K_OPT_OFF
+#define M68K_CPU_STATE      (*your_cpu_state_ptr)
+#define M68K_CPU_STATE_DECL extern m68ki_cpu_core *your_cpu_state_ptr;
+#endif
+
 /* If ON, CPU will call the callback when it encounters an illegal instruction,
  * passing the opcode as argument. If the callback returns 1, then it gets
  * treated as a normal instruction, and the illegal exception in canceled. If it

@@ -20,24 +20,24 @@ uint pmmu_translate_addr(uint addr_in)
 	addr_out = addr_in;
 
 	// if SRP is enabled and we're in supervisor mode, use it
-	if ((m68ki_cpu.mmu_tc & 0x02000000) && (m68ki_get_sr() & 0x2000))
+	if ((M68K_CPU_STATE.mmu_tc & 0x02000000) && (m68ki_get_sr() & 0x2000))
 	{
-		root_aptr = m68ki_cpu.mmu_srp_aptr;
-		root_limit = m68ki_cpu.mmu_srp_limit;
+		root_aptr = M68K_CPU_STATE.mmu_srp_aptr;
+		root_limit = M68K_CPU_STATE.mmu_srp_limit;
 	}
 	else	// else use the CRP
 	{
-		root_aptr = m68ki_cpu.mmu_crp_aptr;
-		root_limit = m68ki_cpu.mmu_crp_limit;
+		root_aptr = M68K_CPU_STATE.mmu_crp_aptr;
+		root_limit = M68K_CPU_STATE.mmu_crp_limit;
 	}
 
 	// get initial shift (# of top bits to ignore)
-	is = (m68ki_cpu.mmu_tc>>16) & 0xf;
-	abits = (m68ki_cpu.mmu_tc>>12)&0xf;
-	bbits = (m68ki_cpu.mmu_tc>>8)&0xf;
-	cbits = (m68ki_cpu.mmu_tc>>4)&0xf;
+	is = (M68K_CPU_STATE.mmu_tc>>16) & 0xf;
+	abits = (M68K_CPU_STATE.mmu_tc>>12)&0xf;
+	bbits = (M68K_CPU_STATE.mmu_tc>>8)&0xf;
+	cbits = (M68K_CPU_STATE.mmu_tc>>4)&0xf;
 
-//	fprintf(stderr,"PMMU: tcr %08x limit %08x aptr %08x is %x abits %d bbits %d cbits %d\n", m68ki_cpu.mmu_tc, root_limit, root_aptr, is, abits, bbits, cbits);
+//	fprintf(stderr,"PMMU: tcr %08x limit %08x aptr %08x is %x abits %d bbits %d cbits %d\n", M68K_CPU_STATE.mmu_tc, root_limit, root_aptr, is, abits, bbits, cbits);
 
 	// get table A offset
 	tofs = (addr_in<<is)>>(32-abits);
@@ -180,23 +180,23 @@ uint pmmu_translate_addr(uint addr_in)
 void m68881_mmu_ops(void)
 {
 	uint16 modes;
-	uint32 ea = m68ki_cpu.ir & 0x3f;
+	uint32 ea = M68K_CPU_STATE.ir & 0x3f;
 	uint64 temp64;
 
 	// catch the 2 "weird" encodings up front (PBcc)
-	if ((m68ki_cpu.ir & 0xffc0) == 0xf0c0)
+	if ((M68K_CPU_STATE.ir & 0xffc0) == 0xf0c0)
 	{
 		fprintf(stderr,"680x0: unhandled PBcc\n");
 		return;
 	}
-	else if ((m68ki_cpu.ir & 0xffc0) == 0xf080)
+	else if ((M68K_CPU_STATE.ir & 0xffc0) == 0xf080)
 	{
 		fprintf(stderr,"680x0: unhandled PBcc\n");
 		return;
 	}
 	else	// the rest are 1111000xxxXXXXXX where xxx is the instruction family
 	{
-		switch ((m68ki_cpu.ir>>9) & 0x7)
+		switch ((M68K_CPU_STATE.ir>>9) & 0x7)
 		{
 			case 0:
 				modes = OPER_I_16();
@@ -242,15 +242,15 @@ void m68881_mmu_ops(void)
 							 	switch ((modes>>10) & 7)
 								{
 									case 0:	// translation control register
-										WRITE_EA_32(ea, m68ki_cpu.mmu_tc);
+										WRITE_EA_32(ea, M68K_CPU_STATE.mmu_tc);
 										break;
 
 									case 2: // supervisor root pointer
-										WRITE_EA_64(ea, (uint64)m68ki_cpu.mmu_srp_limit<<32 | (uint64)m68ki_cpu.mmu_srp_aptr);
+										WRITE_EA_64(ea, (uint64)M68K_CPU_STATE.mmu_srp_limit<<32 | (uint64)M68K_CPU_STATE.mmu_srp_aptr);
 										break;
 
 									case 3: // CPU root pointer
-										WRITE_EA_64(ea, (uint64)m68ki_cpu.mmu_crp_limit<<32 | (uint64)m68ki_cpu.mmu_crp_aptr);
+										WRITE_EA_64(ea, (uint64)M68K_CPU_STATE.mmu_crp_limit<<32 | (uint64)M68K_CPU_STATE.mmu_crp_aptr);
 										break;
 
 									default:
@@ -263,28 +263,28 @@ void m68881_mmu_ops(void)
 							 	switch ((modes>>10) & 7)
 								{
 									case 0:	// translation control register
-										m68ki_cpu.mmu_tc = READ_EA_32(ea);
+										M68K_CPU_STATE.mmu_tc = READ_EA_32(ea);
 
-										if (m68ki_cpu.mmu_tc & 0x80000000)
+										if (M68K_CPU_STATE.mmu_tc & 0x80000000)
 										{
-											m68ki_cpu.pmmu_enabled = 1;
+											M68K_CPU_STATE.pmmu_enabled = 1;
 										}
 										else
 										{
-											m68ki_cpu.pmmu_enabled = 0;
+											M68K_CPU_STATE.pmmu_enabled = 0;
 										}
 										break;
 
 									case 2:	// supervisor root pointer
 										temp64 = READ_EA_64(ea);
-										m68ki_cpu.mmu_srp_limit = (temp64>>32) & 0xffffffff;
-										m68ki_cpu.mmu_srp_aptr = temp64 & 0xffffffff;
+										M68K_CPU_STATE.mmu_srp_limit = (temp64>>32) & 0xffffffff;
+										M68K_CPU_STATE.mmu_srp_aptr = temp64 & 0xffffffff;
 										break;
 
 									case 3:	// CPU root pointer
 										temp64 = READ_EA_64(ea);
-										m68ki_cpu.mmu_crp_limit = (temp64>>32) & 0xffffffff;
-										m68ki_cpu.mmu_crp_aptr = temp64 & 0xffffffff;
+										M68K_CPU_STATE.mmu_crp_limit = (temp64>>32) & 0xffffffff;
+										M68K_CPU_STATE.mmu_crp_aptr = temp64 & 0xffffffff;
 										break;
 
 									default:
@@ -297,11 +297,11 @@ void m68881_mmu_ops(void)
 						case 3:	// MC68030 to/from status reg
 							if (modes & 0x200)
 							{
-								WRITE_EA_32(ea, m68ki_cpu.mmu_sr);
+								WRITE_EA_32(ea, M68K_CPU_STATE.mmu_sr);
 							}
 							else
 							{
-								m68ki_cpu.mmu_sr = READ_EA_32(ea);
+								M68K_CPU_STATE.mmu_sr = READ_EA_32(ea);
 							}
 							break;
 
@@ -313,9 +313,8 @@ void m68881_mmu_ops(void)
 				break;
 
 			default:
-				fprintf(stderr,"680x0: unknown PMMU instruction group %d\n", (m68ki_cpu.ir>>9) & 0x7);
+				fprintf(stderr,"680x0: unknown PMMU instruction group %d\n", (M68K_CPU_STATE.ir>>9) & 0x7);
 				break;
 		}
 	}
 }
-
